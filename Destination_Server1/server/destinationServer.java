@@ -21,60 +21,76 @@ public class destinationServer {
         int localport = 8181;
 
         Socket socket = null;
-        try (ServerSocket serverSocket = new ServerSocket(localport)) {
-            System.out.println("Destination Server is listening on port " + localport);
+        while (true) {
+            try (ServerSocket serverSocket = new ServerSocket(localport)) {
+                System.out.println("Destination Server is listening on port " + localport);
 
-            socket = serverSocket.accept();
+                socket = serverSocket.accept();
 
-            System.out.println("Received connection from : " + socket.getRemoteSocketAddress());
+                System.out.println("Received connection from : " + socket.getRemoteSocketAddress());
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter out = new PrintWriter(socket.getOutputStream());
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter out = new PrintWriter(socket.getOutputStream());
 
-            // request from client server or
-            // message from client server
-            String requestData = in.readLine();
-            String encryptedMessage = getEncryptedMessage(requestData);
-            String encryptedKey = getEncryptedKey(requestData);
-            SecretKey key = DecryptionUtils.stringToKey(encryptedKey);
+                // request from client server or
+                // message from client server
+                String requestData = in.readLine();
+                if (requestData == null || requestData.isEmpty()) {
+                    continue;
+                } else {
+                    String encryptedMessage = getEncryptedMessage(requestData);
+                    String encryptedKey = getEncryptedKey(requestData);
+                    SecretKey key = DecryptionUtils.stringToKey(encryptedKey);
 
-            String originalMessage = null;
-            try {
-                originalMessage = DecryptionUtils.decrypt(encryptedMessage, key);
-            } catch (InvalidKeyException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (NoSuchAlgorithmException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (NoSuchPaddingException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IllegalBlockSizeException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (BadPaddingException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+                    String originalMessage = null;
+                    try {
+                        originalMessage = DecryptionUtils.decrypt(encryptedMessage, key);
+                    } catch (InvalidKeyException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (NoSuchAlgorithmException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (NoSuchPaddingException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (IllegalBlockSizeException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (BadPaddingException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
 
-            System.out.println("Request Received from Client : " + originalMessage);
+                    System.out.println("Request Received from Client : " + originalMessage);
 
-            out.println("Hi Angad ! Myself Destination Server");
-            out.flush();
+                    out.println("Hi Angad ! Myself Destination Server");
+                    out.flush();
+                    break;
 
-        } catch (IOException ex) {
-            System.out.println(ex.getLocalizedMessage());
-            ex.printStackTrace();
-        } finally {
-            if (socket != null && !socket.isClosed()) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    System.out.println("Failed to close socket: " + e.getMessage());
+                }
+
+            } catch (IOException ex) {
+                System.out.println(ex.getLocalizedMessage());
+                ex.printStackTrace();
+            } finally {
+                if (socket != null && !socket.isClosed()) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        System.out.println("Failed to close socket: " + e.getMessage());
+                    }
                 }
             }
         }
+        if (socket != null && !socket.isClosed()) {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                System.out.println("Failed to close socket: " + e.getMessage());
+            }
+        }
+
     }
 
     private static String getEncryptedMessage(String json) {
